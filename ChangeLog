@@ -1,0 +1,25 @@
+2023-10-20
+        * Multi-lingual and Mono-lingual experiments finalized; Mistral-7b and XGLM-7.5b is the winners.
+        * Time to write the code scripts for alpaca-data generation, get seeds from doga and mete.
+        * The cost can be too much, make cost approximation both for (i) gpt-3.5-instruct and (ii) gpt-4.
+        * Decide pre-training data for Mono-lingual model; Culturax-175GB?
+        * Next week finalize the datasets both for pre-training and instruction-tuning.
+        
+        TODO:
+        - Generate alpaca data from seed-tr.
+        - Create pre-training and instruction-tuning splits.
+
+2023-10-19  
+        * Opt and mistral gives the best ppl for monolingual settings.
+        * Now try xglm-7.5b, mGPT, flan-T5-xxl, bloomz.
+
+2023-10-18
+
+        * We should evaluate the ppl of current LLMs to see their Turkish knowledge.
+        * Two options: train multilingual-LLM or teach monolingual-LLM with further CLM.
+        * Start getting by bpc for monolingual models on tr-news: llama2-7b, mistral-7b, falcon-7b, vicuna-7b, mpt-7b, phi-1.5, pythia, gpt2, opt.
+        * Try different max-windows: 4096, 2048, 1024, 512, 256, 128.
+        
+        TODO:
+        - Try multilingual models: xglm-564M, xglm-1.7B, xglm-2.9B, xglm-4.5B, xglm-7.5B, mGPT, flan-T5, bloomz.
+        - Try other turkish-llms all in huggingface.
