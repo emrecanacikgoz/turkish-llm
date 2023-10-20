@@ -30,8 +30,8 @@ playground to create turkish llms
 | bloomz-7b1 |    2048  | 5,459,180 | 13,488,318 | 250,880|  20,515,212.0 | 29,597,194.0 | 3.7579  | 1.520961 | 42.859    | 4.5766   | 5.4215   | 2.1942    |
 | blz-7b1-mt |    2048  | 5,459,180 | 13,488,318 | 250,880|  20,547,892.0 | 29,644,342.0 | 3.7639  | 1.523384 | 43.116    | 4.5877   | 5.4301   | 2.1977    |
 
-# Calendar
-- [ x ] step1: Select a (i) monolingual and (ii) multilingual model. 
+### Calendar
+- [x] step1: Select a (i) monolingual and (ii) multilingual model. 
 - [ ] step2: Create alapaca-tr data.
 - [ ] step3: Select a pretraining dataset.
 - [ ] step4: lora-tune (ii) on step2.
