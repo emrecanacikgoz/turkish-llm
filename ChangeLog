@@ -23,3 +23,11 @@
         TODO:
         - Try multilingual models: xglm-564M, xglm-1.7B, xglm-2.9B, xglm-4.5B, xglm-7.5B, mGPT, flan-T5, bloomz.
         - Try other turkish-llms all in huggingface.
+
+- [ x ] step1: Select a (i) monolingual and (ii) multilingual model. 
+- [ ] step2: Create alapaca-tr data.
+- [ ] step3: Select a pretraining dataset.
+- [ ] step4: lora-tune (ii) on step2.
+- [ ] step5: lora-train (i) on step3 and then step2.
+- [ ] step6: create rlaif dataset.
+- [ ] step7: eval everything on turkish benchmarks.
