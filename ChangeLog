@@ -1,3 +1,11 @@
+2023-10-25
+        * Alpaca-tr is finalized with gpt-3.5-instruct and costs ~33$ for 51,658 data.
+        * There are noisy examples and generally biased to national question, towards to Turkey(?).
+        * Need to find a high quality pre-training split; Culturax is one opportunity.
+        * Ask oflazer to private script is another choice.
+        * But how many of them we should use it for pre-training?
+        * Are we going to do curriculm learning: (i) base-model => pretraining => sft => rlaif, (ii) multilingual-model => sft => rlaif, (iii) multilingual-model => pretraining => sft => rlaif?
+
 2023-10-20
         * Multi-lingual and Mono-lingual experiments finalized; Mistral-7b and XGLM-7.5b is the winners.
         * Time to write the code scripts for alpaca-data generation, get seeds from doga and mete.
