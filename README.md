@@ -32,7 +32,7 @@ playground to create turkish llms
 
 ### Calendar
 - [x] step1: Select a (i) monolingual and (ii) multilingual model. 
-- [ ] step2: Create alapaca-tr data.
+- [x] step2: Create alapaca-tr data.
 - [ ] step3: Select a pretraining dataset.
 - [ ] step4: lora-tune (ii) on step2.
 - [ ] step5: lora-train (i) on step3 and then step2.
