@@ -1,3 +1,16 @@
+2023-10-30
+        * 4000 token is fine max-length according to distributions.
+        * lets start with full-parameter: 
+                1. train Mistral with 0.5Gb 1Gb, 2Gb, 5Gb, 11Gb as CLM.
+                2. fine-tune Mistral alpaca-lora for each.
+                3. train XGLM with 0.5Gb 1Gb, 2Gb, 5Gb, 11Gb as CLM.
+                4. fine-tune XGLM alpaca-lora for each.
+        * Do lora training: 
+                1. train Mistral with 0.5Gb 1Gb, 2Gb, 5Gb, 11Gb as CLM.
+                2. fine-tune Mistral alpaca-lora for each.
+                3. train XGLM with 0.5Gb 1Gb, 2Gb, 5Gb, 11Gb as CLM.
+                4. fine-tune XGLM alpaca-lora for each.
+
 2023-10-25
         * Alpaca-tr is finalized with gpt-3.5-instruct and costs ~33$ for 51,658 data.
         * There are noisy examples and generally biased to national question, towards to Turkey(?).
