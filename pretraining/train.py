@@ -115,8 +115,8 @@ def train(
 
     # poor man's data loader
     data_dir = os.path.join('data', dataset)
-    train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
-    val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
+    train_data = np.memmap(os.path.join(data_dir, 'train-parquet-all.bin'), dtype=np.uint16, mode='r')
+    val_data = np.memmap(os.path.join(data_dir, 'val-parquet-all.bin'), dtype=np.uint16, mode='r')
     
 
     # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
@@ -202,7 +202,7 @@ def train(
     # logging
     if wandb_log and master_process:
         import wandb
-        wandb.init(project=wandb_project, name=wandb_run_name, config=config, entity='kuisai')
+        wandb.init(project=wandb_project, name=wandb_run_name, config=config, entity='kuisai', dir="/localscratch/eacikgoz/")
 
     # training loop
     X, Y = get_batch(

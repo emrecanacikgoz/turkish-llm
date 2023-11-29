@@ -18,14 +18,21 @@ num_proc_load_dataset = num_proc
 
 if __name__ == '__main__':
     # takes 54GB in huggingface .cache dir, about 8M documents (8,013,769)
-    #dataset = load_dataset('uonlp/CulturaX', language="tr", token="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")
-    dataset = load_dataset('json', data_files="/kuacc/users/eacikgoz17/el-turco/data-tools/culturax-jsons/tr_part_00000.json")
+    #dataset = load_dataset('json', data_files="/truba/home/eacikgoz/hamza/leyla-00000-00009.json")
+    dataset = load_dataset('parquet', data_files="/truba/home/eacikgoz/hamza/data-parquet/*.parquet") # 129,486,207,634 tokens
     dataset = dataset.remove_columns(['timestamp', 'url', 'source'])
 
-    # owt by default only contains the 'train' split, so create a test split
-    split_dataset = dataset["train"].train_test_split(test_size=0.002, seed=2357, shuffle=True)
-    split_dataset['val'] = split_dataset.pop('test') # rename the test split to val
+    # use tr-news dataset for validation
+    test_dataset = load_dataset('json', data_files="/truba/home/eacikgoz/hamza/trnews-64-test.json") # 6,720,970 tokens
+    test_dataset = test_dataset.remove_columns(['timestamp', 'url', 'source'])
 
+    # owt by default only contains the 'train' split, so create a test split
+    #split_dataset = dataset["train"].train_test_split(test_size=0.001, seed=2357, shuffle=True)
+    #split_dataset['val'] = split_dataset.pop('test') # rename the test split to val
+
+    dataset['val'] = test_dataset['train']
+    split_dataset = dataset
+    print(split_dataset)
 
     # this results in:
     # >>> split_dataset
@@ -36,7 +43,7 @@ if __name__ == '__main__':
     #     })
     #     val: Dataset({
     #         features: ['text'],
-    #         num_rows: 4007
+    #         num_rows: 5000
     #     })
     # })
 
@@ -60,7 +67,7 @@ if __name__ == '__main__':
     # concatenate all the ids in each dataset into one large file we can use for training
     for split, dset in tokenized.items():
         arr_len = np.sum(dset['len'], dtype=np.uint64)
-        filename = os.path.join(os.path.dirname(__file__), f'{split}.bin')
+        filename = os.path.join(os.path.dirname(__file__), f'{split}-parquet-all.bin')
         dtype = np.uint16 # (can do since enc.max_token_value == 50256 is < 2**16)
         arr = np.memmap(filename, dtype=dtype, mode='w+', shape=(arr_len,))
         total_batches = 1024
