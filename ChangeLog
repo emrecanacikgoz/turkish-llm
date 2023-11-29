@@ -1,3 +1,13 @@
+2023-11-28
+        *128xparquet data has 129,486,207,634 train tokens and 6,720,970 tokens val tokens
+        * We can start trainings for each method but first understand how many iterations to do. How we calculate it?
+
+        TODO:
+        - Train scratch GPT-125m on 128xparquet with 8xGPU. 
+        - LoRA train Mistral with 1x, 5x, 10x parquet data.
+        - LoRA train XGLM-7.5b with 1x, 5x, 10x parquet data.
+
+
 2023-11-11
         * nanoGPT script added and running successfully for 1xGPU. Lets see for multi-gpu settings.
         * Partial data is loadded, need to load all data.
