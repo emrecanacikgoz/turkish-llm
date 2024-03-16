@@ -41,8 +41,8 @@ false sample id's:
        1103, 1112, 1123, 1124, 1125, 1130, 1135, 1136, 1138, 1145, 1149,
        1160, 1163]
 
-Oğuz: First Half -> In progress:
-Mete Second Half (after sample 530)-> Done:
+Oğuz: First Half -> 1st pass done, 2nd pass in progress:
+Mete Second Half (after sample 530)-> 1st pass done, 2nd pass done:
 
 
 TruthfulQA:
@@ -64,5 +64,6 @@ false sample id's:
        691, 692, 697, 701, 707, 733, 735, 736, 737, 739, 756, 773, 785,
        803]
 
-Oğuz: First Half -> In progress:
-Mete Second Half (after sample 399) -> Done: Unsure Samples: 456, 466 467, 472, 473, 484, 500, 520, 522, 525, 556, 580, 604, 612, 632, 637, 639, 641, 661, 679, 692, 697, 733, 735, 736, 785, 803
+Oğuz: First Half -> 1st pass done, 2nd pass in progress:
+Mete Second Half (after sample 399) -> 1st pass done, 2nd pass done: 
+      Unsure Samples: 456, 466 467, 472, 473, 484, 500, 520, 522, 525, 556, 580, 604, 612, 632, 637, 639, 641, 661, 679, 692, 697, 733, 735, 736, 785, 803
