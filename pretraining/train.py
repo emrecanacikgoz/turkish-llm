@@ -1,21 +1,18 @@
 """
-This training script can be run both on a single gpu in debug mode,
-and also in a larger training run with distributed data parallel (ddp).
+This script trains a GPT model on a given dataset. It is a simplified version of the training script
+used in the https://github.com/karpathy/nanoGPT repository, with some simplifications and improvements. 
+It is designed to be a standalone script that can be run on a single GPU or multiple GPUs using PyTorch's
+DistributedDataParallel (DDP) module. It is also designed to be run on a single node or across multiple nodes
+using the torchrun utility provided by PyTorch.
 
 To run on a single GPU, example:
 $ python train.py --batch_size=32 --compile=False
 
 To run with DDP on 4 gpus on 1 node, example:
 $ torchrun --standalone --nproc_per_node=4 train.py
-
-To run with DDP on 4 gpus across 2 nodes, example:
-- Run on the first (master) node with example IP 123.456.123.456:
-$ torchrun --nproc_per_node=8 --nnodes=2 --node_rank=0 --master_addr=123.456.123.456 --master_port=1234 train.py
-- Run on the worker node:
-$ torchrun --nproc_per_node=8 --nnodes=2 --node_rank=1 --master_addr=123.456.123.456 --master_port=1234 train.py
-(If your cluster does not have Infiniband interconnect prepend NCCL_IB_DISABLE=1)
 """
 
+# imports
 import os
 import time
 import pickle
@@ -46,9 +43,12 @@ def train(
     wandb_run_name: str = 'gpt2',          # 'run' + str(time.time())
     # data
     dataset: str = 'uonlp/CulturaX',
+    tokenized_training_input_file: str = 'train-parquet-all.bin',
+    tokenized_validation_input_file: str = 'val-parquet-all.bin',
     gradient_accumulation_steps: int = 40, # 5 * 8, used to simulate larger batch sizes
     batch_size = 12,                       # if gradient_accumulation_steps > 1, this is the micro-batch size
     block_size = 1024,
+    dtype: str = 'float16',                # float32, float16, bfloat16
     # model
     n_layer: int = 12,
     n_head: int = 12,
@@ -76,12 +76,12 @@ def train(
 
     # various inits, derived attributes, I/O setup
     config = locals()
-    dtype = 'bfloat16' if torch.cuda.is_available() and torch.cuda.is_bf16_supported() else 'float16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
-    ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
+    ddp = int(os.environ.get('RANK', -1)) != -1
     config['ddp'] = ddp
     config['dtype'] = dtype
     print(f"config: {config}\n")
 
+    # DDP setup
     if ddp:
         init_process_group(backend=backend)
         ddp_rank = int(os.environ['RANK'])
@@ -89,14 +89,14 @@ def train(
         ddp_world_size = int(os.environ['WORLD_SIZE'])
         device = f'cuda:{ddp_local_rank}'
         torch.cuda.set_device(device)
-        master_process = ddp_rank == 0 # this process will do logging, checkpointing etc.
-        seed_offset = ddp_rank # each process gets a different seed
+        master_process = ddp_rank == 0
+        seed_offset = ddp_rank 
         # world_size number of processes will be training simultaneously, so we can scale
         # down the desired gradient accumulation iterations per process proportionally
         assert gradient_accumulation_steps % ddp_world_size == 0
         gradient_accumulation_steps //= ddp_world_size
     else:
-        # if not ddp, we are running on a single gpu, and one process
+        # if not ddp, running on a single gpu, and one process
         master_process = True
         seed_offset = 0
         ddp_world_size = 1
@@ -106,24 +106,20 @@ def train(
     if master_process:
         os.makedirs(out_dir, exist_ok=True)
     torch.manual_seed(1337 + seed_offset)
-    torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
-    torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
-    device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.autocast
+    device_type = 'cuda' if 'cuda' in device else 'cpu'
+
     # note: float16 data type will automatically use a GradScaler
     ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
     ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-    # poor man's data loader
+    # load the data in memmap
     data_dir = os.path.join('data', dataset)
-    train_data = np.memmap(os.path.join(data_dir, 'train-parquet-all.bin'), dtype=np.uint16, mode='r')
-    val_data = np.memmap(os.path.join(data_dir, 'val-parquet-all.bin'), dtype=np.uint16, mode='r')
+    train_data = np.memmap(os.path.join(data_dir, tokenized_training_input_file), dtype=np.uint16, mode='r')
+    val_data = np.memmap(os.path.join(data_dir, tokenized_validation_input_file), dtype=np.uint16, mode='r')
     
 
-    # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
     iter_num = 0
     best_val_loss = 1e9
-
-    # attempt to derive vocab_size from the dataset
     meta_path = os.path.join(data_dir, 'meta.pkl')
     meta_vocab_size = None
     if os.path.exists(meta_path):
@@ -132,7 +128,7 @@ def train(
         meta_vocab_size = meta['vocab_size']
         print(f"found vocab_size = {meta_vocab_size} (inside {meta_path})")
 
-    # model init
+    # model initialization
     model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size, bias=bias, vocab_size=None, dropout=dropout) # start with model_args from command line
     if init_from == 'scratch':
         # init a new model from scratch
@@ -144,36 +140,48 @@ def train(
         gptconf = GPTConfig(**model_args)
         model = GPT(gptconf)
     elif init_from == 'resume':
-        print(f"Resuming training from {out_dir}")
-        # resume training from a checkpoint.
+        print(f"Resuming training from {out_dir}...")
         ckpt_path = os.path.join(out_dir, 'ckpt.pt')
+        checkpoint = torch.load(ckpt_path, map_location="cpu")
         checkpoint = torch.load(ckpt_path, map_location=device)
         checkpoint_model_args = checkpoint['model_args']
+
         # force these config attributes to be equal otherwise we can't even resume training
         # the rest of the attributes (e.g. dropout) can stay as desired from command line
         for k in ['n_layer', 'n_head', 'n_embd', 'block_size', 'bias', 'vocab_size']:
             model_args[k] = checkpoint_model_args[k]
+
         # create the model
         gptconf = GPTConfig(**model_args)
+        print(f"creating model with config: {gptconf}")
         model = GPT(gptconf)
+        print(f"created model: {model}")
         state_dict = checkpoint['model']
-        # fix the keys of the state dictionary :(
-        # honestly no idea how checkpoints sometimes get this prefix, have to debug more
+        print(f"loaded model state dict from checkpoint: {state_dict}")
+
+        # if the model is a different size from the checkpoint, this will ensure that we only load matching weights
         unwanted_prefix = '_orig_mod.'
         for k,v in list(state_dict.items()):
             if k.startswith(unwanted_prefix):
                 state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
         model.load_state_dict(state_dict)
+        print(f"loaded model state dict into model...")
         iter_num = checkpoint['iter_num']
         best_val_loss = checkpoint['best_val_loss']
+        print(f"resuming from iteration {iter_num} with best val loss {best_val_loss:.4f}...")
+
+
     elif init_from.startswith('gpt2'):
         print(f"Initializing from OpenAI GPT-2 weights: {init_from}")
+
         # initialize from OpenAI GPT-2 weights
         override_args = dict(dropout=dropout)
         model = GPT.from_pretrained(init_from, override_args)
+
         # read off the created config params, so we can store them into checkpoint correctly
         for k in ['n_layer', 'n_head', 'n_embd', 'block_size', 'bias', 'vocab_size']:
             model_args[k] = getattr(model.config, k)
+
     # crop down the model block size if desired, using model surgery
     if block_size < model.config.block_size:
         model.crop_block_size(block_size)
@@ -202,7 +210,7 @@ def train(
     # logging
     if wandb_log and master_process:
         import wandb
-        wandb.init(project=wandb_project, name=wandb_run_name, config=config, entity='kuisai', dir="/localscratch/eacikgoz/")
+        wandb.init(project=wandb_project, name=wandb_run_name, config=config)
 
     # training loop
     X, Y = get_batch(
@@ -213,7 +221,7 @@ def train(
         batch_size=batch_size, 
         device_type=device_type, 
         device=device,
-        ) # fetch the very first batch
+    )
     t0 = time.time()
     local_iter_num = 0 # number of iterations in the lifetime of this process
     raw_model = model.module if ddp else model # unwrap DDP container if needed
@@ -245,6 +253,8 @@ def train(
                 device=device,
             )
             print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+
+            # log to wandb
             if wandb_log:
                 wandb.log({
                     "iter": iter_num,
@@ -253,6 +263,8 @@ def train(
                     "lr": lr,
                     "mfu": running_mfu*100, # convert to percentage
                 })
+            
+            # save a checkpoint
             if losses['val'] < best_val_loss or always_save_checkpoint:
                 best_val_loss = losses['val']
                 if iter_num > 0:
@@ -272,6 +284,7 @@ def train(
         # forward backward update, with optional gradient accumulation to simulate larger batch size
         # and using the GradScaler if data type is float16
         for micro_step in range(gradient_accumulation_steps):
+            #with torch.autocast(device_type="cuda", dtype=torch.float16):
             if ddp:
                 # in DDP training we only need to sync gradients at the last micro step.
                 # the official way to do this is with model.no_sync() context manager, but
@@ -281,6 +294,7 @@ def train(
             with ctx:
                 logits, loss = model(X, Y)
                 loss = loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
+
             # immediately async prefetch next batch while model is doing the forward pass on the GPU
             X, Y = get_batch(
                 split='train', 
@@ -291,15 +305,19 @@ def train(
                 device_type=device_type, 
                 device=device,
             )
+
             # backward pass, with gradient scaling if training in fp16
             scaler.scale(loss).backward()
+        
         # clip the gradient
         if grad_clip != 0.0:
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+             scaler.unscale_(optimizer)
+             torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+
         # step the optimizer and scaler if training in fp16
         scaler.step(optimizer)
         scaler.update()
+
         # flush the gradients as soon as we can, no need for this memory anymore
         optimizer.zero_grad(set_to_none=True)
 
@@ -324,7 +342,6 @@ def train(
 
     if ddp:
         destroy_process_group()
-
 
 if __name__ == "__main__":
     fire.Fire(train)
