@@ -1,5 +1,14 @@
-# saves the openwebtext dataset to a binary file for training. following was helpful:
-# https://github.com/HazyResearch/flash-attention/blob/main/training/src/datamodules/language_modeling_hf.py
+"""
+This script gives you two .bin files, one for training and one for validation.
+These files contain the tokenized text data in the form of a numpy array.
+The data is tokenized using the GPT-2 Byte Pair Encoding (BPE) tokenizer.
+The tokenizer is obtained from the tiktoken module.
+
+The data is loaded from the parquet files in the data-parquet directory.
+The validation data is loaded from the trnews-64-test.json file.
+
+Output files: train-parquet.bin, val-parquet.bin
+"""
 
 import os
 from tqdm import tqdm
@@ -18,34 +27,18 @@ num_proc_load_dataset = num_proc
 
 if __name__ == '__main__':
     # takes 54GB in huggingface .cache dir, about 8M documents (8,013,769)
-    #dataset = load_dataset('json', data_files="/truba/home/eacikgoz/hamza/leyla-00000-00009.json")
-    dataset = load_dataset('parquet', data_files="/truba/home/eacikgoz/hamza/data-parquet/*.parquet") # 129,486,207,634 tokens
+    dataset = load_dataset('parquet', data_files="data-parquet/*.parquet") # 129,486,207,634 tokens
     dataset = dataset.remove_columns(['timestamp', 'url', 'source'])
 
     # use tr-news dataset for validation
-    test_dataset = load_dataset('json', data_files="/truba/home/eacikgoz/hamza/trnews-64-test.json") # 6,720,970 tokens
+    test_dataset = load_dataset('json', data_files="trnews-64-test.json") # 6,720,970 tokens
+
+    # remove columns we don't need
     test_dataset = test_dataset.remove_columns(['timestamp', 'url', 'source'])
-
-    # owt by default only contains the 'train' split, so create a test split
-    #split_dataset = dataset["train"].train_test_split(test_size=0.001, seed=2357, shuffle=True)
-    #split_dataset['val'] = split_dataset.pop('test') # rename the test split to val
-
     dataset['val'] = test_dataset['train']
     split_dataset = dataset
     print(split_dataset)
 
-    # this results in:
-    # >>> split_dataset
-    # DatasetDict({
-    #     train: Dataset({
-    #         features: ['text'],
-    #         num_rows: 8009762
-    #     })
-    #     val: Dataset({
-    #         features: ['text'],
-    #         num_rows: 5000
-    #     })
-    # })
 
     # we now want to tokenize the dataset. first define the encoding function (gpt2 bpe)
     enc = tiktoken.get_encoding("gpt2")
@@ -81,11 +74,3 @@ if __name__ == '__main__':
             arr[idx : idx + len(arr_batch)] = arr_batch
             idx += len(arr_batch)
         arr.flush()
-
-    # train.bin is ~17GB, val.bin ~8.5MB
-    # train has ~9B tokens (9,035,582,198)
-    # val has ~4M tokens (4,434,897)
-
-    # to read the bin files later, e.g. with numpy:
-    # m = np.memmap('train.bin', dtype=np.uint16, mode='r')
-    # 47909 unique ids in train.bin, 
