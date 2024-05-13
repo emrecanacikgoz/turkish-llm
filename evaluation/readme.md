@@ -7,18 +7,21 @@
 The development of Turkish question-answering datasets, TruthfulQA-TR and ARC-TR, to evaluate the reasoning capabilities of Large Language Models (LLMs) in downstream Question Answering tasks. The datasets were created by translating the TruthfulQA Multiple Choice Dataset and the ARC dataset into Turkish using the DeepL Machine Translation framework (https://github.com/DeepLcom/deepl-python). The translated samples were reviewed for errors, and the test sets from TruthfulQA-MC2 and ARC-Challenge were used for evaluations. The experiments followed the same prompting settings as LLM-Leaderboard, and the performances of all models, including open-source Turkish LLMs from Huggingface, were included in the analysis.
 
 The original English datasets:
-    - arc/arc-en.jsonl
-    - truthfulqa/truthfulqa-en.jsonl
+
+    arc/arc-en.jsonl
+    truthfulqa/truthfulqa-en.jsonl
 
 The final translated datasets:
-    - translations/arc-tr.jsonl
-    - translations/truthfulqa-tr.jsonl
+
+    translations/arc-tr.jsonl
+    translations/truthfulqa-tr.jsonl
     
 Initial translations using the DeepL framework:
-    - arc/arc-tr.jsonl
-    - truthfulqa/truthfulqa-tr.jsonl
 
-* The translations are first annotated by three annotators and the annotations evaluations based on raw agreement, Cohen's and Fleiss' Kappa are calculated using the calculate_stats.py script. 
+    arc/arc-tr.jsonl
+    truthfulqa/truthfulqa-tr.jsonl
+
+The translations are first annotated by three annotators and the annotations evaluations based on raw agreement, Cohen's and Fleiss' Kappa are calculated using the calculate_stats.py script. 
 
 ### Bits-Per-Character (BPC) evaluations
 
