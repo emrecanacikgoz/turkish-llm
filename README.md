@@ -1,8 +1,10 @@
 # Bridging the Bosphorus: Advancing Turkish Large Language Models through Strategies for Low-Resource Language Adaptation and Benchmarking
 
-<img width=60% src="figures/bridge_image.png" alt="Bridging Bosphorus logo" title="Bridging-Bosphorus-logo">
+<p align="center">
+  <img width=65% src="figures/bridge_image.png" alt="Bridging Bosphorus logo" title="Bridging-Bosphorus-logo">
+</p>
 
-- **Project Website:** [Bridging-the-Bospohorus](https://emrecanacikgoz.github.io/Bridging-the-Bosphorus/)
+- **Project Website:** [Bridging-the-Bosphorus](https://emrecanacikgoz.github.io/Bridging-the-Bosphorus/)
 - **Paper:** *[Bridging the Bosphorus: Advancing Turkish Large Language Models through Strategies for Low-Resource Language Adaptation and Benchmarking](https://arxiv.org/abs/2405.04685)*
 
 This repository contains resources related to the development and evaluation of Large Language Models (LLMs) for the Turkish language, focusing on addressing the challenges faced by low-resource languages. The work presented here explores various strategies for training and evaluating LLMs in underrepresented languages, with a special emphasis on Turkish.
@@ -17,7 +19,7 @@ For researchers and developers interested in LLMs for under-resourced languages,
 
 ### Requirements
 
-Before you start, please install the necessary packages here: [equirements.txt](./requirements.txt)
+Before you start, please install the necessary packages here: [requirements.txt](./requirements.txt)
 
 ### Pretraining from Scratch
 
@@ -25,13 +27,9 @@ The scripts and the bash files used for pretraining the Hamza LLM Series: consis
 
 The dataset to train the model can be prepared using the scripts under `pretraining/data/culturax/`.
 
-### Pretraining
-
-The scripts and the bash files used for pretraining the Hamza LLM Series: consisting of Hamza-small (124M), Hamza-medium (354M), Hamza-large (772M), and Hamza-xlarge (1.3b) models can be found under the directory "pretraining/", with a separate bash file for each model.
-
 ## Evaluations
 
-For detailed information about LLM Bits-Per-Character (BPC) Evaluations, TruthfulQA-TR and ARC-TR Turkish question-answering dataset translation and evaluation, please read the documentation here [Model Deployment](./evaluation/README.md)
+For detailed information about LLM Bits-Per-Character (BPC) Evaluations, TruthfulQA-TR and ARC-TR Turkish question-answering dataset translation and evaluation, please read the documentation here [Evaluations](./evaluation/README.md)
 
 ## Citation
 
