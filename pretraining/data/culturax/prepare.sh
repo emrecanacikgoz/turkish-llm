@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task 128 # Kac adet CPU isteyecegini belirtin
 #SBATCH --time=3-0:0:0      # Sure siniri koyun
 
-source activate <your-env-name> # Conda ortamini aktif edin
+source activate llm_tr_pretrain # Conda ortamini aktif edin
 
 python prepare.py
 

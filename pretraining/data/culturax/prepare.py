@@ -16,19 +16,25 @@ import numpy as np
 import tiktoken
 from datasets import load_dataset # huggingface datasets
 
+SMALL_DATA = False
+
 if __name__ == '__main__':
-    # takes 54GB in huggingface .cache dir, about 8M documents (8,013,769)
-    dataset = load_dataset('parquet', data_files="data-parquet/*.parquet") # 129,486,207,634 tokens
-    dataset = dataset.remove_columns(['timestamp', 'url', 'source'])
+    # takes 54GB in huggingface .cache dir, about 8M documents (8,013,769)tr_part_00000.parquet
+    if SMALL_DATA:
+        dataset = load_dataset('parquet', data_files="tr_part_00000.parquet") # 129,486,207,634 tokens
+        dataset = dataset.remove_columns(['timestamp', 'url', 'source'])
 
-    # use tr-news dataset for validation
-    test_dataset = load_dataset('json', data_files="trnews-64-test.json") # 6,720,970 tokens
+        split_dataset = dataset['train'].train_test_split(test_size=0.05, seed=2357, shuffle=True)
+        split_dataset['val'] = split_dataset.pop("test")
+        print(split_dataset)
+    else:
+        dataset = load_dataset('parquet', data_files="/arf/repo/LLMs_models_datasets/datasets/uonlp-CulturaX/tr/*.parquet") # 129,486,207,634 tokens
+        dataset = dataset.remove_columns(['timestamp', 'url', 'source'])
 
-    # remove columns we don't need
-    test_dataset = test_dataset.remove_columns(['timestamp', 'url', 'source'])
-    dataset['val'] = test_dataset['train']
-    split_dataset = dataset
-    print(split_dataset)
+        split_dataset = dataset['train'].train_test_split(test_size=0.000005, seed=2357, shuffle=True)
+        split_dataset['val'] = split_dataset.pop("test")
+        print(split_dataset)
+
 
 
     # we now want to tokenize the dataset. first define the encoding function (gpt2 bpe)
