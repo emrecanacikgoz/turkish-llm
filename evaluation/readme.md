@@ -1,32 +1,52 @@
-# Bridging the Bosphorus: Advancing Turkish Large Language Models through Strategies for Low-Resource Language Adaptation and Benchmarking
+# **Evaluation**
 
-## Evaluation
+## **1️⃣ Setup Environment**
+For evaluation, set up a separate environment:
 
-### Translation Evaluations
+```bash
+conda create --name llm_tr_eval python=3.8 -y
+conda activate llm_tr_eval
+```
 
-The development of Turkish question-answering datasets, TruthfulQA-TR and ARC-TR, to evaluate the reasoning capabilities of Large Language Models (LLMs) in downstream Question Answering tasks. The datasets were created by translating the TruthfulQA Multiple Choice Dataset and the ARC dataset into Turkish using the DeepL Machine Translation framework (https://github.com/DeepLcom/deepl-python). The translated samples were reviewed for errors, and the test sets from TruthfulQA-MC2 and ARC-Challenge were used for evaluations. The experiments followed the same prompting settings as LLM-Leaderboard, and the performances of all models, including open-source Turkish LLMs from Huggingface, were included in the analysis.
+Clone the evaluation framework:
 
-The original English datasets:
+```bash
+git clone https://github.com/alisafaya/lm-evaluation-harness.git
+cd lm-evaluation-harness
+```
 
-    arc/arc-en.jsonl
-    truthfulqa/truthfulqa-en.jsonl
+---
 
-The final translated datasets:
+## **2️⃣ Run Evaluation**
+Run the model evaluation on Turkish benchmarks:
 
-    translations/arc-tr.jsonl
-    translations/truthfulqa-tr.jsonl
-    
-Initial translations using the DeepL framework:
+```bash
+lm_eval --model hf \
+    --model_args pretrained=path/to/model,dtype="float" \
+    --tasks arc_challenge_tr,truthfulqa_tr_mc1,truthfulqa_tr_mc2 \
+    --device cuda:0 \
+    --batch_size 1
+```
 
-    arc/arc-tr.jsonl
-    truthfulqa/truthfulqa-tr.jsonl
+🔹 **Parallelizing across multiple GPUs:**
+```bash
+lm_eval --model hf \
+    --model_args pretrained=path/to/model,dtype="float",parallelize=True \
+    --tasks arc_challenge_tr,truthfulqa_tr_mc1,truthfulqa_tr_mc2 \
+    --device cuda:0 \
+    --batch_size 1
+```
 
-The translations are first annotated by three annotators and the annotations evaluations based on raw agreement, Cohen's and Fleiss' Kappa are calculated using the calculate_stats.py script. 
+📌 **Key Tasks:**
+- **arc_challenge_tr**: Turkish version of the ARC challenge benchmark  
+- **truthfulqa_tr_mc1**: Turkish multiple-choice factuality test  
+- **truthfulqa_tr_mc2**: Another factuality multiple-choice benchmark  
 
-### Bits-Per-Character (BPC) evaluations
+---
 
-Auto-regressive language models are typically trained by optimizing the Negative Log-Likelihood (NLL) of the training data and evaluated using perplexity, a measure of prediction uncertainty. However, comparing models using different tokenizers can be challenging due to varying tokenization results. To address this, we use Bits-Per-Character (BPC), a metric derived from NLL, to evaluate performance at the character level. Our comparisons mainly rely on BPC, which normalizes the impact of tokenization differences. 
+## **📌 Notes**
+- Ensure you replace `path/to/model` with the actual model path after fine-tuning.
+- Parallelizing evaluation across available GPUs can speed up processing.
+- The environment versions (`python=3.12` for training and `python=3.8` for evaluation) are chosen based on compatibility with respective libraries.
 
-The Bits-Per-Character (BPC) for LLMs can be callculated using the script: bpc/bpc.py, which can be run with the bash file bpc/run_bpc.py. The BPC is evaluated on the trnews-64 corpus Safaya et al. (2022), comprising 5,000 samples.
-
-
+This should be a more structured, clear, and optimized version of your config. 🚀 Let me know if you need further refinements!
