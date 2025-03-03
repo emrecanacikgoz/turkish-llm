@@ -1,0 +1,17 @@
+bitsandbytes
+accelerate
+appdirs
+loralib
+black
+black[jupyter]
+datasets
+fire
+peft
+transformers
+sentencepiece
+wandb
+scipy
+numpy
+sentence_transformers
+scikit-learn
+pandas
